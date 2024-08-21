@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using PersonsMVC.Models;
 using System.Diagnostics;
+using PersonsClass.Repository;
+
 
 namespace PersonsMVC.Controllers
 {
@@ -28,5 +30,7 @@ namespace PersonsMVC.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+
     }
 }

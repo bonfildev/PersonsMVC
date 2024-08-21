@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using PersonsClass.Repository;
 using PersonsMVC.Data;
 using PersonsMVC.Models;
+using PersonsClass.Models;
 
 namespace PersonsMVC.Controllers
 {
@@ -167,5 +169,6 @@ namespace PersonsMVC.Controllers
         {
             return _context.Persons.Any(e => e.Id == id);
         }
+
     }
 }
