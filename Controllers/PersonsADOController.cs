@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PersonsClass.Repository;
-
 using PersonsClass.Models;
+
 namespace PersonsMVC.Controllers
 {
     public class PersonsADOController : Controller
@@ -19,9 +19,9 @@ namespace PersonsMVC.Controllers
 
 
         // GET: Persons
-        public async Task<IActionResult> ShowPersons()
+        public async Task<IActionResult> PersonsADO()
         {
-            List<PersonsADO> listaEmpleado = await _repository.GetPersons();
+            List<PersonsADO> listaEmpleado = await _repository.ObtenerEmpleado();
 
             return View(listaEmpleado);
         }
