@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PersonsMVC.Models;
 using PersonsMVC.Interfaces;
+using PersonsMVC.Tools;
+using NuGet.Configuration;
 
 namespace PersonsMVC.Controllers
 {
@@ -10,18 +12,20 @@ namespace PersonsMVC.Controllers
         {
             return View();
         }
+        private readonly IDBSettings _settings;
 
         private readonly IPersons _repository;
-        public PersonsADOController (IPersons repo)
+        public PersonsADOController (IDBSettings conexion)
         {
-            _repository = repo;
+            //_repository = repo;
+            _settings = conexion;
         }
 
-
         // GET: Persons
-        public async Task<IActionResult> Persons()
+        public async Task<IActionResult> PersonsADO()
         {
-            List<Persons> listaEmpleado = await _repository.ObtenerEmpleado();
+            PersonsRepo _repo = new PersonsRepo(_settings);
+            List<Persons> listaEmpleado = await _repo.GetPerson();
 
             return View(listaEmpleado);
         }

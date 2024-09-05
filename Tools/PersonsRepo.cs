@@ -10,13 +10,13 @@ namespace PersonsMVC.Tools
     {
         private readonly IDBSettings _conexion;
 
-        public PersonsRepo(IOptions<IDBSettings> conexion)
+        public PersonsRepo(IDBSettings conexion)
         {
-            _conexion = conexion.Value;
+            _conexion = conexion;
         }
 
 
-        public async Task<List<Persons>> ObtenerEmpleado()
+        public async Task<List<Persons>> GetPerson()
         {
             List<Persons> lista = new List<Persons>();
 
