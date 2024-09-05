@@ -45,10 +45,7 @@ namespace PersonsMVC.Tools
 
                     }
                 }
-
-
             }
-
             return lista;
         }
     }
