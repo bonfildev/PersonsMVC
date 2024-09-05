@@ -3,6 +3,8 @@ using PersonsMVC.Models;
 using PersonsMVC.Interfaces;
 using PersonsMVC.Tools;
 using NuGet.Configuration;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace PersonsMVC.Controllers
 {
@@ -14,10 +16,8 @@ namespace PersonsMVC.Controllers
         }
         private readonly IDBSettings _settings;
 
-        private readonly IPersons _repository;
         public PersonsADOController (IDBSettings conexion)
         {
-            //_repository = repo;
             _settings = conexion;
         }
 
@@ -25,10 +25,25 @@ namespace PersonsMVC.Controllers
         public async Task<IActionResult> PersonsADO()
         {
             PersonsRepo _repo = new PersonsRepo(_settings);
-            List<Persons> listaEmpleado = await _repo.GetPerson();
-
-            return View(listaEmpleado);
+            List<Persons> listPersons = await _repo.GetPerson(0);
+            return View(listPersons);
         }
+
+        // GET: Persons/Edit/5
+        public async Task<IActionResult> EditADO(int? id)
+        {
+            PersonsRepo _repo = new PersonsRepo(_settings);
+            Persons person = await _repo.EditPerson(id);
+            return View(person);
+        }
+
+        // SET: Persons
+        //public async Task<IActionResult> EditADO(int id, [Bind("Id,Name,Age,Email")] Persons persons)
+        //{
+        //    PersonsRepo _repo = new PersonsRepo(_settings);
+        //    await _repo.UpdatePersonsADO(id, persons);
+        //    return View(persons);
+        //}
 
     }
 }
