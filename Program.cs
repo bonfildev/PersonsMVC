@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol.Core.Types;
-using PersonsClass.Configuration;
-using PersonsClass.Repository;
+using Microsoft.EntityFrameworkCore; 
 using PersonsMVC.Data;
+using PersonsMVC.Tools;
+using PersonsMVC.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +17,8 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
-builder.Services.Configure<ConfConnection>(builder.Configuration.GetSection("ConfConnection"));
-builder.Services.AddScoped<IPersons, PersonsRepo>();
+builder.Services.AddSingleton<IDBSettings, AppSetting>();
+//builder.Services.AddScoped<IPersons, PersonsRepo>();
 
 var app = builder.Build();
 

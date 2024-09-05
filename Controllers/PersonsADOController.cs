@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PersonsClass.Repository;
-using PersonsClass.Models;
+using PersonsMVC.Models;
+using PersonsMVC.Interfaces;
 
 namespace PersonsMVC.Controllers
 {
@@ -19,9 +19,9 @@ namespace PersonsMVC.Controllers
 
 
         // GET: Persons
-        public async Task<IActionResult> PersonsADO()
+        public async Task<IActionResult> Persons()
         {
-            List<PersonsADO> listaEmpleado = await _repository.ObtenerEmpleado();
+            List<Persons> listaEmpleado = await _repository.ObtenerEmpleado();
 
             return View(listaEmpleado);
         }

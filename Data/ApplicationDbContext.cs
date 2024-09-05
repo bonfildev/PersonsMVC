@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using PersonsMVC.Models;
-using PersonsClass.Models;
 
 namespace PersonsMVC.Data
 {

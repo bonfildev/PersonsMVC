@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PersonsMVC.Models;
 using System.Diagnostics;
-using PersonsClass.Repository;
 
 
 namespace PersonsMVC.Controllers
