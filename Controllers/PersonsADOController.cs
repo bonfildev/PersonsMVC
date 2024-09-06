@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PersonsMVC.Models;
 using PersonsMVC.Interfaces;
+using PersonsMVC.Models;
 using PersonsMVC.Tools;
-using NuGet.Configuration;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 
 namespace PersonsMVC.Controllers
 {
@@ -13,19 +10,21 @@ namespace PersonsMVC.Controllers
         public IActionResult Index()
         {
             return View();
-        }
+        } 
+        private readonly SqlTools _sqlTools;
         private readonly IDBSettings _settings;
 
-        public PersonsADOController (IDBSettings conexion)
+        public PersonsADOController (IDBSettings settings)
         {
-            _settings = conexion;
+            _sqlTools = new SqlTools(settings);
+            _settings = settings;
         }
 
         // GET: Persons
         public async Task<IActionResult> PersonsADO()
         {
             PersonsRepo _repo = new PersonsRepo(_settings);
-            List<Persons> listPersons = await _repo.GetPerson(0);
+            List<Persons> listPersons = await _repo.GetPerson();
             return View(listPersons);
         }
 
@@ -38,12 +37,14 @@ namespace PersonsMVC.Controllers
         }
 
         // SET: Persons
-        //public async Task<IActionResult> EditADO(int id, [Bind("Id,Name,Age,Email")] Persons persons)
-        //{
-        //    PersonsRepo _repo = new PersonsRepo(_settings);
-        //    await _repo.UpdatePersonsADO(id, persons);
-        //    return View(persons);
-        //}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditADO(int id, [Bind("Id,Name,Age,Email")] Persons persons)
+        {
+            PersonsRepo _repo = new PersonsRepo(_settings);
+            await _repo.UpdatePersonsADO(id, persons);
+            return View(persons);
+        }
 
     }
 }

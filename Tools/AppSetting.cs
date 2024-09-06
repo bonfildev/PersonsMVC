@@ -11,6 +11,7 @@ namespace PersonsMVC.Tools
             _configuration = configuration;
         }
         public string DBConnection => _configuration["Settings:DBConnection"];
+        public string AppDir => _configuration["Settings:AppDir"];
 
     }
 }

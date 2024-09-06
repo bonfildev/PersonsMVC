@@ -2,52 +2,38 @@
 using PersonsMVC.Interfaces;
 using PersonsMVC.Models;
 using System.Data;
+using System.Data.Common;
 using System.Text;
 
 namespace PersonsMVC.Tools
 {
     public class PersonsRepo
     {
-        private readonly IDBSettings _conexion;
+        private readonly SqlTools _sqlTools;
 
-        public PersonsRepo(IDBSettings conexion)
+        public PersonsRepo(IDBSettings _settings)
         {
-            _conexion = conexion;
+            _sqlTools = new SqlTools(_settings);
         }
 
 
-        public async Task<List<Persons>> GetPerson(int? id)
+        public async Task<List<Persons>> GetPerson()
         {
             List<Persons> lista = new List<Persons>();
-
-            using (var conexion = new SqlConnection(_conexion.DBConnection))
+            StringBuilder strSQL = new StringBuilder();
+            strSQL.AppendLine("Select * From Persons"); 
+            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
+            
+            while (await dr.ReadAsync())
             {
-                conexion.Open(); 
-                StringBuilder strSQL = new StringBuilder();
-                strSQL.AppendLine("Select * From Persons");
-                if (id != 0)
+                lista.Add(new Persons()
                 {
-                    strSQL.AppendLine(" WHERE Id = " + id );
-                }
-                SqlCommand cmd = new SqlCommand(strSQL.ToString(), conexion);
-                cmd.CommandType = CommandType.Text;
-                using (var dr = await cmd.ExecuteReaderAsync())
-                {
+                    Id = Convert.ToInt32(dr["Id"]),
+                    Name = dr["Name"].ToString(),
+                    Age = Convert.ToInt32(dr["Age"].ToString()),
+                    Email = dr["Email"].ToString()
 
-                    while (await dr.ReadAsync())
-                    {
-
-                        lista.Add(new Persons()
-                        {
-                            Id = Convert.ToInt32(dr["Id"]),
-                            Name = dr["Name"].ToString(),
-                            Age = Convert.ToInt32(dr["Age"].ToString()),
-                            Email = dr["Email"].ToString()
-
-                        });
-                    }
-                }
-                conexion.Close();
+                });
             }
             return lista;
         }
@@ -55,49 +41,31 @@ namespace PersonsMVC.Tools
         public async Task<Persons> EditPerson(int? id)
         {
             Persons person = new Persons();
-            using (var conexion = new SqlConnection(_conexion.DBConnection))
+            StringBuilder strSQL = new StringBuilder();
+            strSQL.AppendLine("Select * From Persons");
+            if (id != 0)
             {
-                conexion.Open();
-                StringBuilder strSQL = new StringBuilder();
-                strSQL.AppendLine("Select * From Persons");
-                if (id != 0)
-                {
-                    strSQL.AppendLine(" WHERE Id = " + id);
-                }
-                SqlCommand cmd = new SqlCommand(strSQL.ToString(), conexion);
-                cmd.CommandType = CommandType.Text;
-
-
-                using (var dr = await cmd.ExecuteReaderAsync())
-                { 
-                    while (await dr.ReadAsync())
-                    {
-                        person.Id = Convert.ToInt32(dr["Id"]);
-                        person.Name = dr["Name"].ToString();
-                        person.Age = Convert.ToInt32(dr["Age"].ToString());
-                        person.Email = dr["Email"].ToString();
-                    }
-                }
-                conexion.Close();
+                strSQL.AppendLine(" WHERE Id = " + id);
             }
+            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
+            while (await dr.ReadAsync())
+            {
+                person.Id = Convert.ToInt32(dr["Id"]);
+                person.Name = dr["Name"].ToString();
+                person.Age = Convert.ToInt32(dr["Age"].ToString());
+                person.Email = dr["Email"].ToString();
+            } 
             return person;
         }
         public async Task<Persons> UpdatePersonsADO(int id, Persons persons)
         {
-            using (var conexion = new SqlConnection(_conexion.DBConnection))
-            {
-                conexion.Open();
-                StringBuilder strSQL = new StringBuilder();
-                strSQL.AppendLine("UPDATE Persons");
-                strSQL.AppendLine(" SET Name = '" + persons.Name + "',");
-                strSQL.AppendLine("     Age = '" + persons.Age + "',");
-                strSQL.AppendLine("     Email = '" + persons.Name + "'" );
-                strSQL.AppendLine(" WHERE Id = " + id);
-                SqlCommand cmd = new SqlCommand("Update Persons SET", conexion);
-                cmd.ExecuteNonQuery();
-                conexion.Close();
-                conexion.Dispose();
-            }
+            StringBuilder strSQL = new StringBuilder();
+            strSQL.AppendLine("UPDATE Persons");
+            strSQL.AppendLine(" SET Name = '" + persons.Name + "',");
+            strSQL.AppendLine("     Age = '" + persons.Age + "',");
+            strSQL.AppendLine("     Email = '" + persons.Email + "'");
+            strSQL.AppendLine(" WHERE Id = " + id);
+            _sqlTools.ExecCommand("", "UpdatePersonsADO", strSQL);
             return persons;
         }
     }
