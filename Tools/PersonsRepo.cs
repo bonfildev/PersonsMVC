@@ -28,7 +28,7 @@ namespace PersonsMVC.Tools
             {
                 lista.Add(new Persons()
                 {
-                    Id = Convert.ToInt32(dr["Id"]),
+                    Id = Convert.ToInt32(dr["Id"].ToString()),
                     Name = dr["Name"].ToString(),
                     Age = Convert.ToInt32(dr["Age"].ToString()),
                     Email = dr["Email"].ToString()
@@ -37,7 +37,16 @@ namespace PersonsMVC.Tools
             }
             return lista;
         }
-
+        public async Task<Persons> CreatePersonADO(Persons persons)
+        {
+            StringBuilder strSQL = new StringBuilder();
+            strSQL.AppendLine("INSERT INTO Persons (Name,Age,Email)");
+            strSQL.AppendLine(" Values(" + _sqlTools.QI(persons.Name.ToString(), false, true));
+            strSQL.AppendLine("        " + _sqlTools.QI(persons.Age.ToString(),true, true));
+            strSQL.AppendLine("        " + _sqlTools.QI(persons.Email, false, false) + ")");
+            await _sqlTools.ExecCommand("", "CreatePersonsADO", strSQL);
+            return persons;
+        }
         public async Task<Persons> EditPerson(int? id)
         {
             Persons person = new Persons();
@@ -50,7 +59,7 @@ namespace PersonsMVC.Tools
             SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
             while (await dr.ReadAsync())
             {
-                person.Id = Convert.ToInt32(dr["Id"]);
+                person.Id = Convert.ToInt32(dr["Id"].ToString());
                 person.Name = dr["Name"].ToString();
                 person.Age = Convert.ToInt32(dr["Age"].ToString());
                 person.Email = dr["Email"].ToString();
@@ -61,11 +70,11 @@ namespace PersonsMVC.Tools
         {
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("UPDATE Persons");
-            strSQL.AppendLine(" SET Name = '" + persons.Name + "',");
-            strSQL.AppendLine("     Age = '" + persons.Age + "',");
-            strSQL.AppendLine("     Email = '" + persons.Email + "'");
+            strSQL.AppendLine(" SET Name = " + _sqlTools.QI(persons.Name.ToString(), false, true));
+            strSQL.AppendLine("     Age = " + _sqlTools.QI(persons.Age.ToString(), true, true));
+            strSQL.AppendLine("     Email = " + _sqlTools.QI(persons.Email, false, false));
             strSQL.AppendLine(" WHERE Id = " + id);
-            _sqlTools.ExecCommand("", "UpdatePersonsADO", strSQL);
+            await _sqlTools.ExecCommand("", "UpdatePersonsADO", strSQL);
             return persons;
         }
     }

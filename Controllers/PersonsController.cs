@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PersonsMVC.Data;
 using PersonsMVC.Models;
@@ -21,17 +25,6 @@ namespace PersonsMVC.Controllers
             return View(await _context.Persons.ToListAsync());
         }
 
-        // GET: Persons
-        public async Task<IActionResult> SearchForm()
-        {
-            return View();
-        }
-        // GET: Persons
-        public async Task<IActionResult> ShowSearchResult(string SearchName)
-        {
-            return View("Index", await _context.Persons.Where(j=>j.Name.Contains(SearchName)).ToListAsync());
-        }
-
         // GET: Persons/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -50,8 +43,7 @@ namespace PersonsMVC.Controllers
             return View(persons);
         }
 
-        [Authorize]
-        //   GET: Persons/Create
+        // GET: Persons/Create
         public IActionResult Create()
         {
             return View();
@@ -60,7 +52,6 @@ namespace PersonsMVC.Controllers
         // POST: Persons/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Age,Email")] Persons persons)
@@ -162,6 +153,5 @@ namespace PersonsMVC.Controllers
         {
             return _context.Persons.Any(e => e.Id == id);
         }
-
     }
 }

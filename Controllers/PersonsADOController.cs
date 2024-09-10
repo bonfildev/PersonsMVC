@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.EntityFrameworkCore;
 using PersonsMVC.Interfaces;
 using PersonsMVC.Models;
 using PersonsMVC.Tools;
 
 namespace PersonsMVC.Controllers
-{
+{ 
     public class PersonsADOController : Controller
     {
         public IActionResult Index()
@@ -13,11 +16,31 @@ namespace PersonsMVC.Controllers
         } 
         private readonly SqlTools _sqlTools;
         private readonly IDBSettings _settings;
-
+         
         public PersonsADOController (IDBSettings settings)
         {
             _sqlTools = new SqlTools(settings);
             _settings = settings;
+        }
+        //   GET: Persons/Create
+        public IActionResult CreateADO()
+        {
+            return View();
+        }
+
+        // POST: Persons/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598. 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateADO([Bind("ID,Name,Age,Email")] Persons persons)
+        {
+            if (ModelState.IsValid)
+            {
+                PersonsRepo _repo = new PersonsRepo(_settings);
+                await _repo.CreatePersonADO(persons);
+            }
+            return View(persons);
         }
 
         // GET: Persons
@@ -38,7 +61,7 @@ namespace PersonsMVC.Controllers
 
         // SET: Persons
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> EditADO(int id, [Bind("Id,Name,Age,Email")] Persons persons)
         {
             PersonsRepo _repo = new PersonsRepo(_settings);

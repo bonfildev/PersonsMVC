@@ -1,10 +1,8 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Identity.Client;
-using NuGet.Configuration;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using PersonsMVC.Interfaces;
 using System.Data;
 using System.Text;
-using System.Threading;
 
 namespace PersonsMVC.Tools
 {
@@ -26,7 +24,7 @@ namespace PersonsMVC.Tools
         /// <param name="funcion"></param>
         /// <param name="strSQL">Comando a ejecutar</param>
         /// <returns></returns>
-        public long ExecCommand(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar en la base de datos
+        public async Task<long> ExecCommand(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar en la base de datos
         {
             SqlConnection cnComando = OpenConnection(PageName);
             long Rows = 0;
@@ -44,7 +42,7 @@ namespace PersonsMVC.Tools
                     cmComando.Transaction = trComando;
                     cmComando.CommandType = CommandType.Text;
 
-                    Rows = cmComando.ExecuteNonQuery();
+                    Rows = await cmComando.ExecuteNonQueryAsync();
                     trComando.Commit();
                     trComando.Dispose();
                     cmComando.Dispose();
@@ -146,5 +144,25 @@ namespace PersonsMVC.Tools
             }
             return drSQL;
         } // End Function GetClave
+
+        public string QI(string value, bool number, bool coma)
+        {
+            string nvalue = value == null ? value = "" : value;
+            string sVal;
+            sVal = nvalue.Trim().Length == 0 ? "NULL" :
+                        (nvalue.Trim().Replace("'", "").Replace(",", "").Replace("',", ""));
+            if (!number && sVal != "NULL") 
+            { 
+                sVal = "'" + sVal  + "'";
+            } 
+            else {
+                sVal = sVal.Replace("$", "");
+            }
+            if (coma)
+            {
+                sVal = sVal + ",";
+            }
+            return sVal;
+        }
     }
 }
