@@ -70,7 +70,7 @@ namespace PersonsMVC.Tools
         {
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("UPDATE Persons");
-            strSQL.AppendLine(" SET Name = " + _sqlTools.QI(persons.Name.ToString(), false, true));
+            strSQL.AppendLine(" SET Name = " + _sqlTools.QI(persons.Name, false, true));
             strSQL.AppendLine("     Age = " + _sqlTools.QI(persons.Age.ToString(), true, true));
             strSQL.AppendLine("     Email = " + _sqlTools.QI(persons.Email, false, false));
             strSQL.AppendLine(" WHERE Id = " + id);
