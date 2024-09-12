@@ -20,6 +20,10 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IDBSettings, AppSetting>();
 //builder.Services.AddScoped<IPersons, PersonsRepo>();
 
+
+builder.Services.AddServerSideBlazor();
+builder.Services.AddControllersWithViews();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -40,6 +44,15 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}");
+    endpoints.MapBlazorHub();
+});
+
 
 app.MapControllerRoute(
     name: "default",
