@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PersonsMVC.Models;
 
-public partial class PersonsTask
+public partial class PersonsTasks
 {
     public int Idtask { get; set; }
 
@@ -12,4 +12,5 @@ public partial class PersonsTask
     public DateTime? RegisterDate { get; set; }
 
     public bool Finished { get; set; }
+	public int IDPerson { get; set; }
 }

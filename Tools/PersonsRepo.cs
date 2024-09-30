@@ -37,11 +37,36 @@ namespace PersonsMVC.Tools
             }
             return lista;
         }
+
+
+        public async Task<List<Persons>> SearchPersons(string SearchString)
+        {
+            List<Persons> lista = new List<Persons>();
+            StringBuilder strSQL = new StringBuilder();
+            strSQL.AppendLine("Select * From Persons");
+            strSQL.AppendLine("    WHERE ");
+            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
+
+            while (await dr.ReadAsync())
+            {
+                lista.Add(new Persons()
+                {
+                    Id = Convert.ToInt32(dr["Id"].ToString()),
+                    Name = dr["Name"].ToString(),
+                    Age = Convert.ToInt32(dr["Age"].ToString()),
+                    Email = dr["Email"].ToString()
+
+                });
+            }
+            return lista;
+        }
+
+
         public async Task<Persons> CreatePersonADO(Persons persons)
         {
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("INSERT INTO Persons (Name,Age,Email)");
-            strSQL.AppendLine(" Values(" + _sqlTools.QI(persons.Name.ToString(), false, true));
+            strSQL.AppendLine(" Values(" + _sqlTools.QI(persons.Name, false, true));
             strSQL.AppendLine("        " + _sqlTools.QI(persons.Age.ToString(),true, true));
             strSQL.AppendLine("        " + _sqlTools.QI(persons.Email, false, false) + ")");
             await _sqlTools.ExecCommand("", "CreatePersonsADO", strSQL);
