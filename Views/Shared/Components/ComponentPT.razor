@@ -1,0 +1,46 @@
+﻿@using Microsoft.AspNetCore.Components
+@using PersonsMVC.Models
+@using PersonsMVC.Interfaces
+@inject IPersonsTasks task
+
+
+<div class="navbar-menu">
+    @*Menu Items from the database*@
+    @foreach (PersonsTasks item in personsTasks)
+    {
+        <tr>
+            <td>
+                @item.IDPerson;
+            </td>
+            <td>
+                @item.Description;
+            </td>
+            <td>
+                @item.RegisterDate;
+            </td>
+            <td>
+                @item.Finished;
+            </td>
+            <td>
+                @item.IDPerson
+            </td>
+        </tr>
+    }
+</div>
+
+
+@code {
+
+    public List<PersonsTasks> personsTasks = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ReadOptions();
+    }
+
+    private void ReadOptions()
+    {
+        personsTasks = task.Options;
+    }
+
+}

@@ -68,6 +68,19 @@ namespace PersonsMVC.Controllers
             await _repo.UpdatePersonsADO(id, persons);
             return View(persons);
         }
+        // GET: Persons/Edit/5
+        public async Task<IActionResult> SearchForm()
+        { 
+            return View("SearchForm");
+        }
+        // GET: Persons/Edit/5
+        public async Task<IActionResult> ShowSearchResults(string SearchString)
+        {
+            PersonsRepo _repo = new PersonsRepo(_settings);
+            List<Persons> listPersons = await _repo.SearchPersons(SearchString);
+            return View(listPersons);
+        }
+
 
     }
 }
