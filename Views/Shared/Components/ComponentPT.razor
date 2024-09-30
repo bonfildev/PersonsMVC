@@ -8,23 +8,25 @@
     @*Menu Items from the database*@
     @foreach (PersonsTasks item in personsTasks)
     {
-        <tr>
-            <td>
-                @item.IDPerson;
-            </td>
-            <td>
-                @item.Description;
-            </td>
-            <td>
-                @item.RegisterDate;
-            </td>
-            <td>
-                @item.Finished;
-            </td>
-            <td>
-                @item.IDPerson
-            </td>
-        </tr>
+        <table>
+            <tr>
+                <td>
+                    @item.IDPerson
+                </td>
+                <td>
+                    @item.Description
+                </td>
+                <td>
+                    @item.RegisterDate
+                </td>
+                <td>
+                    @item.Finished
+                </td>
+                <td>
+                    @item.IDPerson
+                </td>
+            </tr>
+        </table>
     }
 </div>
 
