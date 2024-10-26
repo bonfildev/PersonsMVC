@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using PersonsMVC.Interfaces;
 using PersonsMVC.Models;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Text;
@@ -102,5 +103,26 @@ namespace PersonsMVC.Tools
             await _sqlTools.ExecCommand("", "UpdatePersonsADO", strSQL);
             return persons;
         }
+
+
+        public async Task<List<Autocomplete>> PersonsAutocomplete(string str)
+        {
+            List<Autocomplete> lista = new List<Autocomplete>();
+            StringBuilder strSQL = new StringBuilder();
+            strSQL.AppendLine("Select ID,Name From Persons");
+            strSQL.AppendLine(" WHERE Name like '%" + str +"%'");
+            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
+
+            while (await dr.ReadAsync())
+            {
+                lista.Add(new Autocomplete()
+                {
+                    label = dr["Name"].ToString(),
+                    val = Convert.ToInt32(dr["Id"].ToString())
+                });
+            }
+            return lista;
+        }
+
     }
 }

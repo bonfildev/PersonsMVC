@@ -4,8 +4,41 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/jquery-ui-1.14.0/jquery-ui.min.js"></script>
+<link href="~/jquery-ui-1.14.0/jquery-ui.structure.min.css" rel="stylesheet" />
+<link href="~/jquery-ui-1.14.0/jquery-ui.theme.min.css" rel="stylesheet" />
 
+<script>
+    $(function(){
+        $("#txtName").autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: '/PersonsADO/NameAutocomplete/',
+                    data: { "prefix": request.term },
+                    type: "POST",
+                    success: function (data) {
+                        response($.map(data, function (item) {
+                            return item;
+                        }))
+                    },
+                    error: function (response) {
+                        alert(response.responseText);
+                    },
+                    failure: function (response) {
+                        alert(response.responseText);
+                    }
+                });
+            },
+            select: function(e,i){
+                $("hName").val(i.item.val);
+            },
+            minLength :2
+        })
+    });
+</script>
+
+<h1>Edit</h1>
 <h4>Persons</h4>
 <hr />
 <div class="row">
@@ -15,7 +48,8 @@
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
+                <input asp-for="Name" id="txtName" class="form-control" />
+                <input type="hidden" id="hName" name="PersonID" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">

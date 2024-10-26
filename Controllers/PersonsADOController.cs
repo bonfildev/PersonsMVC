@@ -81,6 +81,13 @@ namespace PersonsMVC.Controllers
             return View(listPersons);
         }
 
+        [HttpPost]
+        public async Task<JsonResult> NameAutocomplete(string prefix)
+        {
+            PersonsRepo _repo = new PersonsRepo(_settings);
+            var List = await _repo.PersonsAutocomplete(prefix);
+            return Json(List);
+        }
 
     }
 }
