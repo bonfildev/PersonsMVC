@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using Newtonsoft.Json.Linq;
 using PersonsMVC.Interfaces;
 using PersonsMVC.Models;
 using System;
@@ -16,7 +17,6 @@ namespace PersonsMVC.Tools
         {
             _sqlTools = new SqlTools(_settings);
         }
-
 
         public async Task<List<Persons>> GetPerson()
         {
@@ -36,6 +36,8 @@ namespace PersonsMVC.Tools
 
                 });
             }
+            await dr.CloseAsync();
+            await dr.DisposeAsync();
             return lista;
         }
 
@@ -59,6 +61,8 @@ namespace PersonsMVC.Tools
 
                 });
             }
+            await dr.CloseAsync();
+            await dr.DisposeAsync();
             return lista;
         }
 
@@ -89,7 +93,9 @@ namespace PersonsMVC.Tools
                 person.Name = dr["Name"].ToString();
                 person.Age = Convert.ToInt32(dr["Age"].ToString());
                 person.Email = dr["Email"].ToString();
-            } 
+            }
+            await dr.CloseAsync();
+            await dr.DisposeAsync();
             return person;
         }
         public async Task<Persons> UpdatePersonsADO(int id, Persons persons)
@@ -103,7 +109,6 @@ namespace PersonsMVC.Tools
             await _sqlTools.ExecCommand("", "UpdatePersonsADO", strSQL);
             return persons;
         }
-
 
         public async Task<List<Autocomplete>> PersonsAutocomplete(string str)
         {
@@ -121,8 +126,28 @@ namespace PersonsMVC.Tools
                     val = Convert.ToInt32(dr["Id"].ToString())
                 });
             }
+            await dr.CloseAsync();
+            await dr.DisposeAsync();
             return lista;
         }
+        public async Task<List<PersonsRoles>> GetPersonsRoles()
+        {
+            List<PersonsRoles> lista = new List<PersonsRoles>();
+            StringBuilder strSQL = new StringBuilder();
+            strSQL.AppendLine("Select IDRole,RoleName From Roles");
+            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
 
+            while (await dr.ReadAsync())
+            {
+                lista.Add(new PersonsRoles()
+                {
+                    RoleName = dr["RoleName"].ToString(),
+                    IDRole = Convert.ToInt32(dr["IDRole"].ToString())
+                });
+            }
+            await dr.CloseAsync();
+            await dr.DisposeAsync();
+            return lista;
+        }
     }
 }

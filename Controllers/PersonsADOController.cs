@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PersonsMVC.Interfaces;
 using PersonsMVC.Models;
 using PersonsMVC.Tools;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PersonsMVC.Controllers
 { 
@@ -89,5 +91,20 @@ namespace PersonsMVC.Controllers
             return Json(List);
         }
 
+        /// <summary>
+        /// Funcion Utilizada para el llenado de un select list,
+        /// Nota importante, en el lado del cliente en la funcion AJAX
+        /// los elementos declarados en el modelo se leen como camelCase,
+        /// de lo contrario no detecta los elementos de la respuesta 
+        /// Json
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<JsonResult> GetRoles()
+        {
+            PersonsRepo _repo = new PersonsRepo(_settings);
+            List<PersonsRoles> proles = await _repo.GetPersonsRoles();
+            return Json(proles);
+        }
     }
 }

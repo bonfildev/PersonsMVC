@@ -1,8 +1,23 @@
 ﻿@model PersonsMVC.Models.Persons
-
 @{
     ViewData["Title"] = "Create";
 }
+
+<script>
+    $.ajax({
+        url: '/PersonsADO/GetRoles/',
+        type: "GET",
+        dataType: "JSON",
+        data: { },
+        success: function (response) {
+            $("#slRole").html(""); // clear before appending new list
+            $.each(response, function (i, t) {
+                $("#slRole").append(
+                    $('<option></option>').val(i.idRole).html(t.roleName));
+            });
+        }
+    });
+</script>
 
 <h1>Create</h1>
 
@@ -26,6 +41,10 @@
                 <label asp-for="Email" class="control-label"></label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Role</label>
+                <select id="slRole" class="form-control" asp-items="@ViewBag.PersonsRoles"/>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
