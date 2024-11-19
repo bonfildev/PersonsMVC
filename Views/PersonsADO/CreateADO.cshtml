@@ -17,8 +17,10 @@
             });
         }
     });
+    $(function () {
+        $("textarea").htmlarea(); // Initialize jHtmlArea's with all default values
+    });
 </script>
-
 <h1>Create</h1>
 
 <h4>Persons</h4>
@@ -44,7 +46,11 @@
             </div>
             <div class="form-group">
                 <label class="control-label">Role</label>
-                <select id="slRole" class="form-control" asp-items="@ViewBag.PersonsRoles"/>
+                <select id="slRole" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Role</label>
+                <textarea runat="server" id="txtText" cols="50" rows="15"></textarea>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />

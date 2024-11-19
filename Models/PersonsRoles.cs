@@ -12,6 +12,5 @@ namespace PersonsMVC.Models
         public int IDRole { get; set; }
         public string RoleName { get; set; }
 
-
     }
 }
