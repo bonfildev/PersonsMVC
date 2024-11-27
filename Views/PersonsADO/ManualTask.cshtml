@@ -1,0 +1,71 @@
+﻿@{
+    ViewData["Title"] = "Create";
+}
+<h2>Save Table Data</h2>
+
+<table id="dataTable">
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th>Task</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><input type="text" name="Description" class="form-control" /></td>
+            <td><input type="text" name="Task" class="form-control" /></td>
+            <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+        </tr>
+    </tbody>
+</table>
+<button type="button" id="addRowBtn">Add Row</button>
+<button type="button" id="saveDataBtn">Save Data</button>
+
+
+<script>
+    // Add row to the table
+    $('#addRowBtn').click(function () {
+        var newRow = '<tr>' +
+            '<td><input type="text" name="Description" class="form-control" /></td>' +
+            '<td><input type="text" name="Task" class="form-control" /></td>' +
+            '<td><button type="button" class="btn btn-danger removeRow">Remove</button></td>' +
+            '</tr>';
+        $('#dataTable tbody').append(newRow);
+    });
+
+    // Remove row from the table
+    $('#dataTable').on('click', '.removeRow', function () {
+        $(this).closest('tr').remove();
+    });
+
+    // Save table data
+    $('#saveDataBtn').click(function () {
+        var tableData = [];
+        $('#dataTable tbody tr').each(function () {
+            var row = {};
+            $(this).find('input').each(function () {
+                row[$(this).attr('name')] = $(this).val();
+            });
+            tableData.push(row);
+        });
+        // Send data via AJAX to the controller
+        $.ajax({
+            url: '@Url.Action("SaveTableData", "PersonsADO")',
+            type: 'POST',
+            dataType: "JSON",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(tableData),
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message);
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                alert('An error occurred: ' + error);
+            }
+        });
+    });
+</script>

@@ -25,7 +25,7 @@ namespace PersonsMVC.Tools
         /// <param name="funcion"></param>
         /// <param name="strSQL">Comando a ejecutar</param>
         /// <returns></returns>
-        public async Task<long> ExecCommand(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar en la base de datos
+        public async Task<long> ExecCommandAsync(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar en la base de datos
         {
             SqlConnection cnComando = OpenConnection(PageName);
             long Rows = 0;
@@ -62,6 +62,43 @@ namespace PersonsMVC.Tools
             return Math.Abs(Rows);
         } // End ExecCommand 
 
+
+        public long ExecCommandSync(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar en la base de datos
+        {
+            SqlConnection cnComando = OpenConnection(PageName);
+            long Rows = 0;
+            MSGError = string.Empty;
+
+            if (cnComando != null)
+            {
+                try
+                {
+                    SqlTransaction trComando;                  // Variable para la transación
+                    SqlCommand cmComando = new SqlCommand(strSQL.ToString(), cnComando);
+                    trComando = cnComando.BeginTransaction();  // Inicia con el Bloqueo
+
+                    cmComando.CommandTimeout = TimeOut;   // Cambioel Time Out por defualt
+                    cmComando.Transaction = trComando;
+                    cmComando.CommandType = CommandType.Text;
+
+                    Rows = cmComando.ExecuteNonQuery();
+                    trComando.Commit();
+                    trComando.Dispose();
+                    cmComando.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Rows = 0;
+                    MSGError = "SQL_Tools.execCommand:" + ex.Message + " " + strSQL.ToString();
+                    WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
+                }
+                finally
+                {
+                    cnComando.Close();
+                }
+            }
+            return Math.Abs(Rows);
+        } // End ExecCommand 
 
         public SqlConnection OpenConnection(string PageName)
         {

@@ -1,4 +1,7 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json.Linq;
 using PersonsMVC.Interfaces;
 using PersonsMVC.Models;
@@ -74,7 +77,7 @@ namespace PersonsMVC.Tools
             strSQL.AppendLine(" Values(" + _sqlTools.QI(persons.Name, false, true));
             strSQL.AppendLine("        " + _sqlTools.QI(persons.Age.ToString(),true, true));
             strSQL.AppendLine("        " + _sqlTools.QI(persons.Email, false, false) + ")");
-            await _sqlTools.ExecCommand("", "CreatePersonsADO", strSQL);
+            await _sqlTools.ExecCommandAsync("", "CreatePersonsADO", strSQL);
             return persons;
         }
         public async Task<Persons> EditPerson(int? id)
@@ -106,7 +109,7 @@ namespace PersonsMVC.Tools
             strSQL.AppendLine("     Age = " + _sqlTools.QI(persons.Age.ToString(), true, true));
             strSQL.AppendLine("     Email = " + _sqlTools.QI(persons.Email, false, false));
             strSQL.AppendLine(" WHERE Id = " + id);
-            await _sqlTools.ExecCommand("", "UpdatePersonsADO", strSQL);
+            await _sqlTools.ExecCommandAsync("", "UpdatePersonsADO", strSQL);
             return persons;
         }
 
@@ -148,6 +151,23 @@ namespace PersonsMVC.Tools
             await dr.CloseAsync();
             await dr.DisposeAsync();
             return lista;
+        }
+
+
+
+        public async Task<int> InsertPersonsManualTsk(List<TableRowModel> rows)
+        {
+            StringBuilder strSQL = new StringBuilder();
+           
+            foreach (var row in rows)
+            {
+                strSQL.Clear();
+                strSQL.AppendLine("INSERT INTO PersonsManualTask (Description, Task)");
+                strSQL.AppendLine(" Values(" + _sqlTools.QI(row.Description, false, true));
+                strSQL.AppendLine("        " + _sqlTools.QI(row.Task, false, false) + ")");
+                await _sqlTools.ExecCommandAsync("", "InsertPersonsManualTsk", strSQL);
+            }
+            return 0;
         }
     }
 }

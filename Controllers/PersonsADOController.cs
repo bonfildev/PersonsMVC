@@ -1,15 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using PersonsMVC.Interfaces;
 using PersonsMVC.Models;
 using PersonsMVC.Tools;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PersonsMVC.Controllers
-{ 
+{
     public class PersonsADOController : Controller
     {
         public IActionResult Index()
@@ -105,6 +101,26 @@ namespace PersonsMVC.Controllers
             PersonsRepo _repo = new PersonsRepo(_settings);
             List<PersonsRoles> proles = await _repo.GetPersonsRoles();
             return Json(proles);
+        }
+
+
+        // GET: Persons/Edit/5
+        public async Task<IActionResult> ManualTask()
+        {
+            return View("ManualTask");
+        }
+        // Action to save table data using ADO.NET
+        [HttpPost]
+        public async Task<JsonResult> SaveTableData([FromBody]List<TableRowModel> rows)
+        {
+            PersonsRepo _repo = new PersonsRepo(_settings);
+            if (rows != null && rows.Count > 0)
+            {
+                await _repo.InsertPersonsManualTsk(rows);
+                return Json(new { success = true, message = "Data saved successfully." });
+            }
+
+            return Json(new { success = false, message = "No data to save." });
         }
     }
 }
