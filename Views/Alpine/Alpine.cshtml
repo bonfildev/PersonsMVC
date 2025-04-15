@@ -1,0 +1,34 @@
+﻿@model List<PersonsMVC.Models.PersonsTasks>
+
+@{
+    Layout = null;
+}
+
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+<form method="post" asp-action="Save" asp-controller="Alpine">
+    <div x-data="rowHandler(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model)))">
+        <button type="button" @@click="addRow()">Add Row</button>
+
+        <template x-for="(row, index) in rows" :key="index">
+            <div class="flex space-x-2 my-2">
+                <input type="text" :name="'rows[' + index + '].Description'" x-model="row.description" />
+                <input type="number" :name="'rows[' + index + '].RegisterDate'" x-model="row.registerdate" />
+                <input type="number" :name="'rows[' + index + '].Finished'" x-model="row.finished" />
+            </div>
+        </template>
+
+        <button type="submit">Save</button>
+    </div>
+</form>
+
+<script>
+    function rowHandler(initialRows) {
+        return {
+            rows: initialRows ?? [],
+            addRow() {
+                this.rows.push({ name: '', quantity: 0 });
+            }
+        }
+    }
+</script>

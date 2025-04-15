@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PersonsMVC.Models;
 
 public partial class PersonsTasks
 {
+    [Key]
     public int Idtask { get; set; }
 
     public string? Description { get; set; }

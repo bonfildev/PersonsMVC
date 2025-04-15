@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using PersonsMVC.Models;
 
 namespace PersonsMVC.Data
 {
@@ -10,5 +11,6 @@ namespace PersonsMVC.Data
         {
         }
         public DbSet<PersonsMVC.Models.Persons> Persons { get; set; } = default!;
+        public DbSet<PersonsTasks> RowItems { get; set; }
     }
 }
