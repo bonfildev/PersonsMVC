@@ -1,0 +1,116 @@
+﻿@model List<PersonsMVC.Models.PersonsTasks>
+@using Newtonsoft.Json
+
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+<div x-data="taskHandler(@Html.Raw(JsonConvert.SerializeObject(Model)))" x-init="init()" class="p-6">
+    <div class="flex gap-3 mb-4">
+        <button class="bg-green-500 text-white px-3 py-1 rounded" @@click="addRow()">Add Task</button>
+        <button class="bg-blue-500 text-white px-3 py-1 rounded" @@click="postToServer()">Save All</button>
+        <button class="bg-red-500 text-white px-3 py-1 rounded" @@click="clearLocal()">Clear IndexedDB</button>
+    </div>
+
+    <table class="w-full table-auto bg-white shadow rounded">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="p-2">Description</th>
+                <th class="p-2">Register Date</th>
+                <th class="p-2">Finished</th>
+                <th class="p-2">ID Person</th>
+                <th class="p-2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <template x-for="(task, index) in tasks" :key="task.Idtask">
+                <tr>
+                    <td class="p-2"><input type="text" x-model="task.Description" class="border w-full" @@input="updateLocal(task)" /></td>
+                    <td class="p-2"><input type="date" x-model="task.RegisterDate" class="border w-full" @@input="updateLocal(task)" /></td>
+                    <td class="p-2"><input type="checkbox" x-model="task.Finished" @@change="updateLocal(task)" /></td>
+                    <td class="p-2"><input type="number" x-model="task.IDPerson" class="border w-full" @@input="updateLocal(task)" /></td>
+                    <td class="p-2"><button @@click="removeRow(index)" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button></td>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function taskHandler(initialData) {
+        const dbName = 'TaskAppDB';
+        const storeName = 'tasks';
+        let db;
+
+        return {
+            tasks: [],
+            async init() {
+                db = await openDB();
+
+                // Load from IndexedDB if it exists
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const existing = await store.getAll();
+
+                this.tasks = existing.length > 0 ? existing : initialData;
+
+                // Store current state in DB
+                for (let task of this.tasks) {
+                    await saveToIndexedDB(task);
+                }
+            },
+            async addRow() {
+                const newTask = {
+                    Idtask: Date.now(),
+                    Description: '',
+                    RegisterDate: null,
+                    Finished: false,
+                    IDPerson: 0
+                };
+                this.tasks.push(newTask);
+                await saveToIndexedDB(newTask);
+            },
+            async updateLocal(task) {
+                await saveToIndexedDB(task);
+            },
+            async removeRow(index) {
+                const task = this.tasks[index];
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                await store.delete(task.Idtask);
+                this.tasks.splice(index, 1);
+            },
+            async clearLocal() {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                await store.clear();
+                this.tasks = [];
+            },
+            async postToServer() {
+                await fetch('/AlpineController/SaveIndexed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.tasks)
+                }).then(res => res.ok && alert("Saved to SQL Server!"));
+            }
+        };
+
+        async function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+                request.onupgradeneeded = function (e) {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName, { keyPath: 'Idtask' });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveToIndexedDB(task) {
+            const tx = db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+            await store.put(task);
+        }
+    }
+</script>

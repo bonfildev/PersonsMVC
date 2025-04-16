@@ -1,0 +1,114 @@
+﻿@model List<PersonsTasks>
+@using Newtonsoft.Json
+
+<script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+
+<div class="p-6">
+    <div class="flex gap-3 mb-4">
+        <button onclick="addRow()" class="bg-green-500 text-white px-3 py-1 rounded">Add Task</button>
+        <button onclick="submitToServer()" class="bg-blue-500 text-white px-3 py-1 rounded">Save All</button>
+        <button onclick="clearLocal()" class="bg-red-500 text-white px-3 py-1 rounded">Clear Local</button>
+    </div>
+
+    <table class="w-full table-auto bg-white shadow rounded">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="p-2">Description</th>
+                <th class="p-2">Register Date</th>
+                <th class="p-2">Finished</th>
+                <th class="p-2">ID Person</th>
+                <th class="p-2">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="task-body"></tbody>
+    </table>
+</div>
+
+<script>
+    const db = new Dexie("TaskAppDB");
+    db.version(1).stores({ tasks: "Idtask" });
+
+    const serverData = @Html.Raw(JsonConvert.SerializeObject(Model));
+
+    async function init() {
+        const count = await db.tasks.count();
+        if (count === 0) await db.tasks.bulkPut(serverData);
+        renderTable();
+    }
+
+    async function renderTable() {
+        const tasks = await db.tasks.toArray();
+        const tbody = document.getElementById('task-body');
+        tbody.innerHTML = '';
+
+        tasks.forEach(task => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td class="p-2"><input type="text" value="${task.Description ?? ''}" onchange="updateTask(${task.Idtask}, 'Description', this.value)" class="border w-full" /></td>
+                <td class="p-2"><input type="date" value="${task.RegisterDate ? task.RegisterDate.split('T')[0] : ''}" onchange="updateTask(${task.Idtask}, 'RegisterDate', this.value)" class="border w-full" /></td>
+                <td class="p-2"><input type="checkbox" ${task.Finished ? 'checked' : ''} onchange="updateTask(${task.Idtask}, 'Finished', this.checked)" /></td>
+                <td class="p-2"><input type="number" value="${task.IDPerson}" onchange="updateTask(${task.Idtask}, 'IDPerson', this.value)" class="border w-full" /></td>
+                <td class="p-2"><button onclick="deleteTask(${task.Idtask})" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button></td>
+            `;
+
+            tbody.appendChild(row);
+        });
+    }
+
+    async function updateTask(id, field, value) {
+        let task = await db.tasks.get(id);
+        if (!task) return;
+
+        if (field === 'Finished') {
+            task[field] = value;
+        } else if (field === 'IDPerson') {
+            task[field] = parseInt(value);
+        } else if (field === 'RegisterDate') {
+            task[field] = value ? new Date(value).toISOString() : null;
+        } else {
+            task[field] = value;
+        }
+
+        await db.tasks.put(task);
+    }
+
+    async function addRow() {
+        const newTask = {
+            Idtask: Date.now(),
+            Description: '',
+            RegisterDate: null,
+            Finished: false,
+            IDPerson: 0
+        };
+        await db.tasks.put(newTask);
+        renderTable();
+    }
+
+    async function deleteTask(id) {
+        await db.tasks.delete(id);
+        renderTable();
+    }
+
+    async function clearLocal() {
+        await db.tasks.clear();
+        renderTable();
+    }
+
+    async function submitToServer() {
+        const tasks = await db.tasks.toArray();
+        const response = await fetch('/Alpine/SaveIndexed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tasks)
+        });
+
+        if (response.ok) {
+            alert("Data saved to SQL Server!");
+        } else {
+            alert("Error saving data.");
+        }
+    }
+
+    window.onload = init;
+</script>

@@ -153,5 +153,64 @@ namespace PersonsMVC.Controllers
         {
             return _context.Persons.Any(e => e.Id == id);
         }
+
+        [HttpGet]
+        public IActionResult PersonsTasks(int id)
+        {
+            Persons? person = new Persons();
+            person = _context.Persons.FirstOrDefault(p => p.Id == id);
+
+            //if (person == null)
+            //{
+            //    return NotFound(); // or redirect somewhere
+            //}
+
+            var tasks = _context.RowItems
+                .Where(t => t.IDPerson == id)
+                .ToList();
+
+            var model = new PersonsModel
+            {
+                Persons = person,
+                PersonsTasks = tasks
+            };
+
+            return View("PersonsTasks",model);
+        }
+
+        [HttpPost]
+        public IActionResult SaveModel([FromBody] PersonsModel model)
+        {
+            if (model.Persons == null) return BadRequest("No person data");
+
+            var existingPerson = _context.Persons.FirstOrDefault(p => p.Id == model.Persons.Id);
+            if (existingPerson != null)
+            {
+                existingPerson.Name = model.Persons.Name;
+                existingPerson.Email = model.Persons.Email;
+                existingPerson.Age = model.Persons.Age;
+            }
+
+            foreach (var task in model.PersonsTasks)
+            {
+                var existingTask = _context.RowItems.FirstOrDefault(t => t.Idtask == task.Idtask);
+                if (existingTask != null)
+                {
+                    existingTask.Description = task.Description;
+                    existingTask.RegisterDate = task.RegisterDate;
+                    existingTask.Finished = task.Finished;
+                    existingTask.IDPerson = task.IDPerson;
+                }
+                else
+                {
+                    _context.RowItems.Add(task);
+                }
+            }
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+
     }
 }

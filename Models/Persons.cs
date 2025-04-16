@@ -1,10 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data;
-
-namespace PersonsMVC.Models;
+﻿namespace PersonsMVC.Models;
 
 public partial class Persons
 {

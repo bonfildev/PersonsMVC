@@ -25,11 +25,39 @@ namespace PersonsMVC.Controllers
         }
 
 
-        //   GET: Persons/Create
+        //   GET: 
         public async Task<IActionResult> Alpine()
         {
             var rows = await _context.RowItems.ToListAsync();
-            return View(rows);
+            return View("Alpine",rows);
+            //return View("Alpine");
+        }
+        //   GET: 
+        public async Task<IActionResult> AlpineIndexedDB()
+        {
+            var rows = await _context.RowItems.ToListAsync();
+            return View("AlpineIndexedDB", rows);
+            //return View("Alpine");
+        }
+        //   GET: 
+        public async Task<IActionResult> AlpineDexie()
+        {
+            var rows = await _context.RowItems.ToListAsync();
+            return View("AlpineDexie", rows);
+            //return View("Alpine");
+        }
+        //   GET: 
+        public async Task<IActionResult> HTMX()
+        {
+            var rows = await _context.RowItems.ToListAsync();
+            return View("HTMX", rows);
+            //return View("Alpine");
+        }
+        //   GET: 
+        public async Task<IActionResult> PersonsTasks()
+        {
+            var rows = await _context.RowItems.ToListAsync();
+            return View("PersonsTasks", rows);
             //return View("Alpine");
         }
         // POST: /Row/Save
@@ -44,7 +72,32 @@ namespace PersonsMVC.Controllers
             _context.RowItems.AddRange(rows);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Alpine", rows);
+        }
+
+        [HttpPost]
+        public IActionResult SaveIndexed([FromBody] List<PersonsTasks> tasks)
+        {
+            foreach (var task in tasks)
+            {
+                var existing = _context.RowItems.FirstOrDefault(t => t.Idtask == task.Idtask);
+                if (existing != null)
+                {
+                    // Update
+                    existing.Description = task.Description;
+                    existing.RegisterDate = task.RegisterDate;
+                    existing.Finished = task.Finished;
+                    existing.IDPerson = task.IDPerson;
+                }
+                else
+                {
+                    // Add
+                    _context.RowItems.Add(task);
+                }
+            }
+
+            _context.SaveChanges();
+            return Ok(new { success = true });
         }
 
     }

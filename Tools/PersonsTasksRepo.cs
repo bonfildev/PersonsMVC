@@ -20,20 +20,22 @@ namespace PersonsMVC.Tools
 			StringBuilder strSQL = new StringBuilder();
 			strSQL.AppendLine("Select * From PersonsTasks");
 			SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
-
-			while (dr.Read())
+			if (dr != null)
 			{
-				lista.Add(new PersonsTasks()
+				while (dr.Read())
 				{
-					Idtask = Convert.ToInt32(dr["IdTask"].ToString()),
-					Description = dr["Description"].ToString(),
-					RegisterDate =Convert.ToDateTime(dr["RegisterDate"].ToString()),
-					Finished =Convert.ToBoolean(dr["Finished"].ToString()),
-					IDPerson = Convert.ToInt32(dr["IDPerson"].ToString())
+					lista.Add(new PersonsTasks()
+					{
+						Idtask = Convert.ToInt32(dr["IdTask"].ToString()),
+						Description = dr["Description"].ToString(),
+						RegisterDate = Convert.ToDateTime(dr["RegisterDate"].ToString()),
+						Finished = Convert.ToBoolean(dr["Finished"].ToString()),
+						IDPerson = Convert.ToInt32(dr["IDPerson"].ToString())
 
-				});
-			} 
-			return lista;
+					});
+                }
+            }
+            return lista;
 		}
 		 
 	}
