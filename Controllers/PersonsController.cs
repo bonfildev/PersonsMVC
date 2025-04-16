@@ -177,6 +177,30 @@ namespace PersonsMVC.Controllers
 
             return View("PersonsTasks",model);
         }
+        
+        [HttpGet]
+        public IActionResult PersonsTasksBig(int id)
+        {
+            Persons? person = new Persons();
+            person = _context.Persons.FirstOrDefault(p => p.Id == id);
+
+            //if (person == null)
+            //{
+            //    return NotFound(); // or redirect somewhere
+            //}
+
+            var tasks = _context.RowItems
+                .Where(t => t.IDPerson == id)
+                .ToList();
+
+            var model = new PersonsModel
+            {
+                Persons = person,
+                PersonsTasks = tasks
+            };
+
+            return View("PersonsTasksBig", model);
+        }
 
         [HttpPost]
         public IActionResult SaveModel([FromBody] PersonsModel model)
@@ -190,7 +214,6 @@ namespace PersonsMVC.Controllers
                 existingPerson.Email = model.Persons.Email;
                 existingPerson.Age = model.Persons.Age;
             }
-
             foreach (var task in model.PersonsTasks)
             {
                 var existingTask = _context.RowItems.FirstOrDefault(t => t.Idtask == task.Idtask);

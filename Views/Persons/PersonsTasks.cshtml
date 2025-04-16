@@ -126,7 +126,7 @@
         const updatedTasks = await db.tasks.where("IDPerson").equals(personId).toArray();
 
         // Send all data via POST
-        fetch("/Persons/Save", {
+        fetch("/Persons/SaveModel", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ persons: person, personsTasks: updatedTasks })

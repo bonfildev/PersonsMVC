@@ -1,0 +1,165 @@
+﻿@model PersonsMVC.Models.PersonsModel
+
+@{
+    ViewData["Title"] = "Edit Person";
+}
+
+<h2>Edit Person</h2>
+
+<!-- Person Form -->
+<form id="personForm">
+    <input type="hidden" name="Id" value="@Model.Persons.Id" />
+
+    <label>Name:</label>
+    <input type="text" name="Name" value="@Model.Persons.Name" /><br />
+
+    <label>Age:</label>
+    <input type="number" name="Age" value="@Model.Persons.Age" /><br />
+
+    <label>Email:</label>
+    <input type="email" name="Email" value="@Model.Persons.Email" /><br />
+</form>
+
+<hr />
+
+<!-- Task Table -->
+<h3>Tasks</h3>
+<table id="taskTable" border="1">
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th>Finished</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var task in Model.PersonsTasks)
+        {
+            <tr>
+                <td><input class="desc" data-id="@task.Idtask" value="@task.Description" /></td>
+                <td><input type="checkbox" class="finished" data-id="@task.Idtask" @(task.Finished ? "checked" : "") /></td>
+                <td><input type="date" class="date" data-id="@task.Idtask" value="@(task.RegisterDate?.ToString("yyyy-MM-dd"))" /></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button type="button" onclick="addTaskRow()">Add Task</button>
+<button type="button" onclick="saveAll()">Save All</button>
+
+<!-- Scripts -->
+@section Scripts {
+    <script>
+        let db;
+
+        // Initialize IndexedDB and create the tasks object store
+        function initDB() {
+            const request = indexedDB.open("PersonsDB", 1);
+
+            request.onupgradeneeded = function (event) {
+                db = event.target.result;
+
+                if (!db.objectStoreNames.contains("tasks")) {
+                    const store = db.createObjectStore("tasks", {
+                        keyPath: "Idtask", // primary key
+                        autoIncrement: false
+                    });
+                    store.createIndex("IDPerson", "IDPerson", { unique: false });
+                }
+            };
+
+            request.onsuccess = function (event) {
+                db = event.target.result;
+                console.log("IndexedDB initialized.");
+            };
+
+            request.onerror = function (event) {
+                console.error("DB error:", event.target.errorCode);
+            };
+        }
+
+        initDB(); // Call this on page load
+
+        // Adds a new row to the table and stores it in IndexedDB
+        function addTaskRow() {
+            const tableBody = document.querySelector("#taskTable tbody");
+            const newRow = document.createElement("tr");
+            const newId = Date.now(); // Use timestamp as a unique key
+
+            newRow.innerHTML = `
+                <td><input class="desc" data-id="${newId}" value="" /></td>
+                <td><input type="checkbox" class="finished" data-id="${newId}" /></td>
+                <td><input type="date" class="date" data-id="${newId}" /></td>
+            `;
+            tableBody.appendChild(newRow);
+
+            const task = {
+                Idtask: newId,
+                Description: "",
+                Finished: false,
+                RegisterDate: null,
+                IDPerson: parseInt(document.querySelector("input[name='Id']").value)
+            };
+
+            const tx = db.transaction(["tasks"], "readwrite");
+            const store = tx.objectStore("tasks");
+            store.add(task);
+
+            tx.oncomplete = () => console.log("Task added:", task);
+            tx.onerror = (e) => console.error("Add failed:", e.target.error);
+        }
+
+        // Gathers all rows, updates IndexedDB, and posts data to server
+        async function saveAll() {
+            const rows = document.querySelectorAll("#taskTable tbody tr");
+            const tasks = [];
+
+            rows.forEach(row => {
+                const descInput = row.querySelector(".desc");
+                const finishedInput = row.querySelector(".finished");
+                const dateInput = row.querySelector(".date");
+
+                if (descInput && finishedInput && dateInput) {
+                    const id = parseInt(descInput.dataset.id);
+                    const task = {
+                        Idtask: id,
+                        Description: descInput.value,
+                        Finished: finishedInput.checked,
+                        RegisterDate: dateInput.value || null,
+                        IDPerson: parseInt(document.querySelector("input[name='Id']").value)
+                    };
+
+                    tasks.push(task);
+
+                    // Update in IndexedDB
+                    const tx = db.transaction(["tasks"], "readwrite");
+                    const store = tx.objectStore("tasks");
+                    store.put(task); // updates if it exists
+                }
+            });
+
+            // Serialize the person data
+            const formData = new FormData(document.getElementById("personForm"));
+            const person = Object.fromEntries(formData.entries());
+            person.Age = parseInt(person.Age);
+
+            // Send to backend
+            fetch("/Persons/SaveModel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    persons: person,
+                    personsTasks: tasks
+                })
+            }).then(res => {
+                if (res.ok) {
+                    alert("Data saved to SQL Server!");
+                } else {
+                    alert("Server error.");
+                }
+            }).catch(err => {
+                console.error("Network error:", err);
+            });
+        }
+    </script>
+}
