@@ -1,140 +1,164 @@
 ﻿@model PersonsMVC.Models.PersonsModel
 
 @{
-    var jsonTasks = System.Text.Json.JsonSerializer.Serialize(Model.PersonsTasks);
+    ViewData["Title"] = "Edit Person";
 }
 
 <h2>Edit Person</h2>
 
+<!-- Person Form -->
 <form id="personForm">
+    <!-- Hidden person ID -->
     <input type="hidden" name="Id" value="@Model.Persons.Id" />
-    <label>Name: <input type="text" name="Name" value="@Model.Persons.Name" /></label><br />
-    <label>Age: <input type="number" name="Age" value="@Model.Persons.Age" /></label><br />
-    <label>Email: <input type="email" name="Email" value="@Model.Persons.Email" /></label>
+
+    <!-- Editable fields for the person -->
+    <label>Name:</label>
+    <input type="text" name="Name" value="@Model.Persons.Name" /><br />
+
+    <label>Age:</label>
+    <input type="number" name="Age" value="@Model.Persons.Age" /><br />
+
+    <label>Email:</label>
+    <input type="email" name="Email" value="@Model.Persons.Email" /><br />
 </form>
 
+<hr />
+
+<!-- Tasks Section -->
 <h3>Tasks</h3>
-<table id="taskTable">
+<table id="taskTable" border="1">
     <thead>
-        <tr><th>Description</th><th>Finished</th><th>Date</th><th>Actions</th></tr>
+        <tr>
+            <th>Description</th>
+            <th>Finished</th>
+            <th>Date</th>
+        </tr>
     </thead>
-    <tbody></tbody>
+    <tbody>
+        <!-- This body will be dynamically filled with tasks -->
+    </tbody>
 </table>
 
-<button onclick="addRow()">Add Task</button>
-<button onclick="saveAll()">Save All</button>
+<!-- Buttons to add task and save everything -->
+<button type="button" onclick="addTaskRow()">Add Task</button>
+<button type="button" onclick="saveAll()">Save All</button>
 
-<!-- Dexie library -->
-<script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+<!-- Dexie + JavaScript Logic -->
+@section Scripts {
+    <!-- Dexie library from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
 
-<script>
-    const personId = @Model.Persons.Id;
-    const initialTasks = @Html.Raw(jsonTasks);
+    <script>
+        // Initialize Dexie and define schema
+        const db = new Dexie("PersonsDB");
 
-    // =====================
-    // 1. Dexie Setup
-    // =====================
-    const db = new Dexie("PersonTasksDB");
+        // Create a 'tasks' store with primary key Idtask and indexed IDPerson
+        db.version(1).stores({
+            tasks: "Idtask, IDPerson"
+        });
 
-    // Create a versioned schema. This defines the "tasks" table and indexes.
-    db.version(2).stores({
-        tasks: "Idtask, IDPerson" // Idtask = primary key, IDPerson = index so we can filter
-    });
+        // Get the current person ID from hidden input
+        const personId = parseInt(document.querySelector("input[name='Id']").value);
 
-    // =====================
-    // 2. Initialize DB
-    // =====================
-    async function init() {
-        const count = await db.tasks.where("IDPerson").equals(personId).count();
+        // Function to load tasks from IndexedDB on page load
+        async function loadTasks() {
+            const tasks = await db.tasks.where("IDPerson").equals(personId).toArray();
+            const tbody = document.querySelector("#taskTable tbody");
+            tbody.innerHTML = ""; // Clear any existing rows
 
-        // If no tasks for this person are in Dexie, preload them from Razor model
-        if (count === 0 && Array.isArray(initialTasks)) {
-            await db.tasks.bulkPut(initialTasks);
+            // Create table rows for each task from Dexie
+            for (const task of tasks) {
+                appendTaskRow(task);
+            }
         }
 
-        // Render tasks into the HTML table
-        renderTasks();
-    }
-
-    // =====================
-    // 3. Render Tasks to Table
-    // =====================
-    async function renderTasks() {
-        const tbody = document.querySelector("#taskTable tbody");
-        tbody.innerHTML = "";
-
-        // Get all tasks for this person from Dexie
-        const tasks = await db.tasks.where("IDPerson").equals(personId).toArray();
-
-        tasks.forEach(task => {
+        // Function to create and append a table row with inputs
+        function appendTaskRow(task) {
+            const tbody = document.querySelector("#taskTable tbody");
             const row = document.createElement("tr");
+
+            // Generate input fields with current task values
             row.innerHTML = `
-                <td><input value="${task.Description || ""}" data-id="${task.Idtask}" class="desc" /></td>
-                <td><input type="checkbox" ${task.Finished ? "checked" : ""} data-id="${task.Idtask}" class="finished" /></td>
-                <td><input type="date" value="${task.RegisterDate?.substring(0,10) || ""}" data-id="${task.Idtask}" class="date" /></td>
-                <td><button onclick="deleteTask(${task.Idtask})">Delete</button></td>
+                <td><input class="desc" data-id="${task.Idtask}" value="${task.Description || ''}" /></td>
+                <td><input type="checkbox" class="finished" data-id="${task.Idtask}" ${task.Finished ? 'checked' : ''} /></td>
+                <td><input type="date" class="date" data-id="${task.Idtask}" value="${task.RegisterDate ? task.RegisterDate.split('T')[0] : ''}" /></td>
             `;
+
             tbody.appendChild(row);
-        });
-    }
-
-    // =====================
-    // 4. Add a New Row to Dexie
-    // =====================
-    async function addRow() {
-        const newTask = {
-            Idtask: Date.now(), // Use timestamp as temporary unique ID
-            Description: "",
-            Finished: false,
-            RegisterDate: new Date().toISOString(),
-            IDPerson: personId
-        };
-
-        await db.tasks.put(newTask); // Save task in Dexie
-        renderTasks();               // Refresh UI
-    }
-
-    // =====================
-    // 5. Delete a Task
-    // =====================
-    async function deleteTask(id) {
-        await db.tasks.delete(id); // Remove task from Dexie
-        renderTasks();             // Refresh UI
-    }
-
-    // =====================
-    // 6. Save Everything to SQL Server
-    // =====================
-    async function saveAll() {
-        // Update each task from form inputs into Dexie
-        const tasks = await db.tasks.where("IDPerson").equals(personId).toArray();
-
-        for (const task of tasks) {
-            const row = document.querySelector(`[data-id='${task.Idtask}']`).closest("tr");
-            task.Description = row.querySelector(".desc").value;
-            task.Finished = row.querySelector(".finished").checked;
-            task.RegisterDate = row.querySelector(".date").value;
-            await db.tasks.put(task);
         }
 
-        // Get final form data (the person info)
-        const formData = new FormData(document.getElementById("personForm"));
-        const person = Object.fromEntries(formData.entries());
-        person.Age = parseInt(person.Age);
+        // Function to add a new task row
+        async function addTaskRow() {
+            const newId = Date.now(); // Use timestamp as unique ID
 
-        // Re-get the updated tasks to send to server
-        const updatedTasks = await db.tasks.where("IDPerson").equals(personId).toArray();
+            // Create a blank task object
+            const task = {
+                Idtask: newId,
+                Description: "",
+                Finished: false,
+                RegisterDate: null,
+                IDPerson: personId
+            };
 
-        // Send all data via POST
-        fetch("/Persons/SaveModel", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ persons: person, personsTasks: updatedTasks })
-        }).then(res => {
-            if (res.ok) alert("Saved!");
-        });
-    }
+            // Save it immediately in IndexedDB
+            await db.tasks.add(task);
 
-    // Run everything on load
-    init();
-</script>
+            // Append the task as a new table row
+            appendTaskRow(task);
+        }
+
+        // Function to save everything (UI → Dexie → Server)
+        async function saveAll() {
+            const rows = document.querySelectorAll("#taskTable tbody tr");
+            const tasks = [];
+
+            // Loop through all rows and collect data
+            for (const row of rows) {
+                const desc = row.querySelector(".desc");
+                const finished = row.querySelector(".finished");
+                const date = row.querySelector(".date");
+
+                // Build a task object from input fields
+                const task = {
+                    Idtask: parseInt(desc.dataset.id),
+                    Description: desc.value,
+                    Finished: finished.checked,
+                    RegisterDate: date.value || null,
+                    IDPerson: personId
+                };
+
+                // Save/update each task to Dexie
+                await db.tasks.put(task);
+
+                tasks.push(task); // Add to array to send to server
+            }
+
+            // Serialize person form data
+            const formData = new FormData(document.getElementById("personForm"));
+            const person = Object.fromEntries(formData.entries());
+            person.Age = parseInt(person.Age); // Ensure number
+
+            // Send everything to your backend controller
+            fetch("/Persons/SaveModel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    persons: person,
+                    personsTasks: tasks
+                })
+            }).then(res => {
+                if (res.ok) {
+                    alert("Saved to SQL Server!");
+                } else {
+                    alert("Error saving data.");
+                }
+            }).catch(err => {
+                console.error("Fetch error:", err);
+                alert("Network or server error");
+            });
+        }
+
+        // Load tasks when page is ready
+        loadTasks();
+    </script>
+}
