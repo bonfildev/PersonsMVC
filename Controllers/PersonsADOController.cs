@@ -111,12 +111,12 @@ namespace PersonsMVC.Controllers
         }
         // Action to save table data using ADO.NET
         [HttpPost]
-        public async Task<JsonResult> SaveTableData([FromBody]List<PersonsTasks> rows)
+        public async Task<JsonResult> SaveTableData([FromBody] PersonsModel model)
         {
             PersonsRepo _repo = new PersonsRepo(_settings);
-            if (rows != null && rows.Count > 0)
+            if (model.PersonsTasks != null && model.PersonsTasks.Count > 0)
             {
-                await _repo.InsertPersonsManualTsk(rows);
+                await _repo.InsertPersonsManualTsk(model.PersonsTasks);
                 return Json(new { success = true, message = "Data saved successfully." });
             }
 

@@ -182,7 +182,7 @@ namespace PersonsMVC.Tools
                 strSQL.AppendLine("INSERT INTO PersonsTasks ([Description],[RegisterDate],[Finished],[IDPerson])");
                 strSQL.AppendLine(" Values(" + _sqlTools.QI(row.Description?.ToString() ?? string.Empty, false)); // Fix: Use null-coalescing operator to handle possible null value  
                 strSQL.AppendLine("        " + _sqlTools.QI(row.RegisterDate?.ToString() ?? string.Empty, false)); 
-                strSQL.AppendLine("        " + _sqlTools.QI(row.Finished.ToString(), false)); 
+                strSQL.AppendLine("        " + _sqlTools.QI(row.Finished.ToString(), true)); 
                 strSQL.AppendLine("        " + _sqlTools.QI(row.IDPerson.ToString(), false, true)); 
                 await _sqlTools.ExecuteQueryAsync("", "InsertPersonsManualTsk", strSQL);
             }
