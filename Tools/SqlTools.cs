@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using PersonsMVC.Interfaces;
-using PersonsMVC.Models;
 using System.Data;
 using System.Text;
 
@@ -12,105 +10,97 @@ namespace PersonsMVC.Tools
 
         public readonly IDBSettings _settings;
         private const int TimeOut = 1000;
-        private string MSGError = string.Empty;
+        private string Error = string.Empty;
         public SqlTools(IDBSettings settings)
         {
             _settings = settings;
         }
-        //-----------------------------------------------------------------------------
-        /// <summary>
-        ///Procedimientos que ejecuta codigo SQL de Update, Delete e Insert 
-        /// </summary>
-        /// <param name="pagina">Nombre del página que invoca el comenado</param>
-        /// <param name="funcion"></param>
-        /// <param name="strSQL">Comando a ejecutar</param>
-        /// <returns></returns>
-        public async Task<long> ExecCommandAsync(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar en la base de datos
+        public async Task<long> ExecCommandAsync(string PageName, string FunctionName, StringBuilder strSQL)  // Query a ejecutar
         {
-            SqlConnection cnComando = OpenConnection(PageName);
+            SqlConnection conn = OpenConnection();
             long Rows = 0;
-            MSGError = string.Empty;
+            Error = string.Empty;
 
-            if (cnComando != null)
+            if (conn != null)
             {
                 try
                 {
-                    SqlTransaction trComando;                  // Variable para la transación
-                    SqlCommand cmComando = new SqlCommand(strSQL.ToString(), cnComando);
-                    trComando = cnComando.BeginTransaction();  // Inicia con el Bloqueo
+                    SqlTransaction trans;                 
+                    SqlCommand comm = new SqlCommand(strSQL.ToString(), conn);
+                    trans = conn.BeginTransaction();
 
-                    cmComando.CommandTimeout = TimeOut;   // Cambioel Time Out por defualt
-                    cmComando.Transaction = trComando;
-                    cmComando.CommandType = CommandType.Text;
+                    comm.CommandTimeout = TimeOut;
+                    comm.Transaction = trans;
+                    comm.CommandType = CommandType.Text;
 
-                    Rows = await cmComando.ExecuteNonQueryAsync();
-                    trComando.Commit();
-                    trComando.Dispose();
-                    cmComando.Dispose();
+                    Rows = await comm.ExecuteNonQueryAsync();
+                    trans.Commit();
+                    trans.Dispose();
+                    comm.Dispose();
                 }
                 catch (Exception ex)
                 {
                     Rows = 0;
-                    MSGError = "SQL_Tools.execCommand:" + ex.Message + " " + strSQL.ToString();
+                    Error = "SQL_Tools.execCommand:" + ex.Message + " " + strSQL.ToString();
                     WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
                 }
                 finally
                 {
-                    cnComando.Close();
+                    conn.Close();
                 }
             }
             return Math.Abs(Rows);
         } // End ExecCommand 
 
 
-        public long ExecCommandSync(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar en la base de datos
+        public long ExecCommandSync(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar
         {
-            SqlConnection cnComando = OpenConnection(PageName);
+            SqlConnection conn = OpenConnection();
             long Rows = 0;
-            MSGError = string.Empty;
+            Error = string.Empty;
 
-            if (cnComando != null)
+            if (conn != null)
             {
                 try
                 {
-                    SqlTransaction trComando;                  // Variable para la transación
-                    SqlCommand cmComando = new SqlCommand(strSQL.ToString(), cnComando);
-                    trComando = cnComando.BeginTransaction();  // Inicia con el Bloqueo
+                    SqlTransaction trans;
+                    SqlCommand comm = new SqlCommand(strSQL.ToString(), conn);
+                    trans = conn.BeginTransaction();
 
-                    cmComando.CommandTimeout = TimeOut;   // Cambioel Time Out por defualt
-                    cmComando.Transaction = trComando;
-                    cmComando.CommandType = CommandType.Text;
+                    comm.CommandTimeout = TimeOut;
+                    comm.Transaction = trans;
+                    comm.CommandType = CommandType.Text;
 
-                    Rows = cmComando.ExecuteNonQuery();
-                    trComando.Commit();
-                    trComando.Dispose();
-                    cmComando.Dispose();
+                    Rows = comm.ExecuteNonQuery();
+                    trans.Commit();
+                    trans.Dispose();
+                    comm.Dispose();
                 }
                 catch (Exception ex)
                 {
                     Rows = 0;
-                    MSGError = "SQL_Tools.execCommand:" + ex.Message + " " + strSQL.ToString();
+                    Error = "SQL_Tools.execCommand:" + ex.Message + " " + strSQL.ToString();
                     WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
                 }
                 finally
                 {
-                    cnComando.Close();
+                    conn.Close();
                 }
             }
             return Math.Abs(Rows);
         } // End ExecCommand 
 
-        public SqlConnection OpenConnection(string PageName)
+        public SqlConnection OpenConnection()
         {
             SqlConnection cnSQL = new SqlConnection { ConnectionString = _settings.DBConnection };
-            MSGError = string.Empty;
+            Error = string.Empty;
             try
             {
                 cnSQL.Open();
             }
             catch (Exception ex)
             {
-                WriteError(PageName, "OpenConnection", ex.Message);
+                WriteError("", "OpenConnection", ex.Message);
             }
             return cnSQL;
         }
@@ -121,7 +111,7 @@ namespace PersonsMVC.Tools
             {
                 string strDir = _settings.AppDir == null ? "" : _settings.AppDir;
 
-                StreamWriter Output = new StreamWriter(strDir + GetLogFileName(), true);
+                StreamWriter Output = new StreamWriter(strDir + DateTime.Now.ToString() + ".csv" , true);
                 Output.WriteLine("\"" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
                     + "\",\"" + FileName + "\",\"" + FunctionName + "\",\"" + msgError + "\"");
                 Output.Close();
@@ -131,41 +121,13 @@ namespace PersonsMVC.Tools
                 ;
             }
         }
-        private string GetLogFileName()
-        {
-            DateTime _date = DateTime.Now;
-            if (_date.DayOfWeek == DayOfWeek.Tuesday)
-                _date = _date.AddDays(-1);
-            else if (_date.DayOfWeek == DayOfWeek.Wednesday)
-                _date = _date.AddDays(-2);
-            else if (_date.DayOfWeek == DayOfWeek.Thursday)
-                _date = _date.AddDays(-3);
-            else if (_date.DayOfWeek == DayOfWeek.Friday)
-                _date = _date.AddDays(-4);
-            else if (_date.DayOfWeek == DayOfWeek.Saturday)
-                _date = _date.AddDays(-5);
-            else if (_date.DayOfWeek == DayOfWeek.Sunday)
-                _date = _date.AddDays(-6);
-            return "log_" + _date.ToString("yyyy_MM_dd") + ".csv";
-        }
-
-
-        /// <summary>
-        /// Realiza la lectura de en modo conectado de un Data Reader
-        /// </summary>
-        /// <param name="pagina"></param>
-        /// <param name="funcion"></param>
-        /// <param name="cnSQL"></param>
-        /// <param name="cmSQL"></param>
-        /// <param name="strSQL"></param>
-        /// <returns></returns>
         public SqlDataReader OpenDataReader(string pagina, string funcion, StringBuilder strSQL)
         {
             SqlConnection cnSQL;
             SqlCommand cmSQL;
-            cnSQL = OpenConnection(pagina);
+            cnSQL = OpenConnection();
             SqlDataReader drSQL = null;
-            MSGError = string.Empty;
+            Error = string.Empty;
 
             if (cnSQL != null)
             {
@@ -176,7 +138,7 @@ namespace PersonsMVC.Tools
                 }
                 catch (Exception ex)
                 {
-                    MSGError = "SQL_Tools.OpenDataReader:" + ex.Message + " " + strSQL.ToString();
+                    Error = "SQL_Tools.OpenDataReader:" + ex.Message + " " + strSQL.ToString();
                     WriteError(pagina, "OpenDataReader " + pagina + " " + funcion, ex.Message + " " + strSQL.ToString());
                 }
             }
