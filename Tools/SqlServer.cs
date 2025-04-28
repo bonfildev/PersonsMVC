@@ -39,7 +39,7 @@ namespace PersonsMVC.Tools
                 catch (Exception ex)
                 {
                     Rows = 0;
-                    WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
+                    WriteError(PageName, "ExecuteQueryAsync " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
                 }
                 finally
                 {
@@ -72,7 +72,7 @@ namespace PersonsMVC.Tools
                 catch (Exception ex)
                 {
                     Rows = 0;
-                    WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
+                    WriteError(PageName, "ExecuteQuerySync " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
                 }
                 finally
                 {
