@@ -50,10 +50,10 @@ namespace PersonsMVC.Tools
                 }
             }
             return Math.Abs(Rows);
-        } // End ExecCommand 
+        } 
 
 
-        public long ExecCommandSync(string PageName, string FunctionName, StringBuilder strSQL)  // Comando a ejecutar
+        public long ExecCommandSync(string PageName, string FunctionName, StringBuilder strSQL)  // Query a ejecutar
         {
             SqlConnection conn = OpenConnection();
             long Rows = 0;
