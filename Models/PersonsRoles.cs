@@ -9,8 +9,9 @@ namespace PersonsMVC.Models
     {
         // Display Attribute will appear in the Html.LabelFor
         [Display(Name = "User Role")]
+        [Key]
         public int IDRole { get; set; }
-        public string RoleName { get; set; }
+        public string? RoleName { get; set; }
 
     }
 }

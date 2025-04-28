@@ -12,12 +12,12 @@ namespace PersonsMVC.Controllers
         {
             return View();
         } 
-        private readonly SqlTools _sqlTools;
+        private readonly SqlServer _sqlTools;
         private readonly IDBSettings _settings;
          
         public PersonsADOController (IDBSettings settings)
         {
-            _sqlTools = new SqlTools(settings);
+            _sqlTools = new SqlServer(settings);
             _settings = settings;
         }
         //   GET: Persons/Create
@@ -111,7 +111,7 @@ namespace PersonsMVC.Controllers
         }
         // Action to save table data using ADO.NET
         [HttpPost]
-        public async Task<JsonResult> SaveTableData([FromBody]List<TableRowModel> rows)
+        public async Task<JsonResult> SaveTableData([FromBody]List<PersonsTasks> rows)
         {
             PersonsRepo _repo = new PersonsRepo(_settings);
             if (rows != null && rows.Count > 0)

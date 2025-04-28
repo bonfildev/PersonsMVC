@@ -139,7 +139,7 @@
             person.Age = parseInt(person.Age); // Ensure number
 
             // Send everything to your backend controller
-            fetch("/Persons/SaveModel", {
+            fetch("/PersonsADO/SaveTableData", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

@@ -14,11 +14,11 @@ namespace PersonsMVC.Tools
 {
     public class PersonsRepo
     {
-        private readonly SqlTools _sqlTools;
+        private readonly SqlServer _sqlTools;
 
         public PersonsRepo(IDBSettings _settings)
         {
-            _sqlTools = new SqlTools(_settings);
+            _sqlTools = new SqlServer(_settings);
         }
 
         public async Task<List<Persons>> GetPerson()
@@ -26,18 +26,20 @@ namespace PersonsMVC.Tools
             List<Persons> lista = new List<Persons>();
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("Select * From Persons"); 
-            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
-            
-            while (await dr.ReadAsync())
+            SqlDataReader? dr = _sqlTools.OpenDataReader("", "", strSQL);
+            if (dr != null)
             {
-                lista.Add(new Persons()
+                while (await dr.ReadAsync())
                 {
-                    Id = Convert.ToInt32(dr["Id"].ToString()),
-                    Name = dr["Name"].ToString(),
-                    Age = Convert.ToInt32(dr["Age"].ToString()),
-                    Email = dr["Email"].ToString()
+                    lista.Add(new Persons()
+                    {
+                        Id = Convert.ToInt32(dr["Id"].ToString()),
+                        Name = dr["Name"].ToString(),
+                        Age = Convert.ToInt32(dr["Age"].ToString()),
+                        Email = dr["Email"].ToString() ?? ""
 
-                });
+                    });
+                }
             }
             await dr.CloseAsync();
             await dr.DisposeAsync();
@@ -50,22 +52,25 @@ namespace PersonsMVC.Tools
             List<Persons> lista = new List<Persons>();
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("Select * From Persons");
-            strSQL.AppendLine("    WHERE ");
-            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
+            strSQL.AppendLine("    WHERE Name LIKE '%" + SearchString + "%'"); // Added condition to use SearchString  
 
-            while (await dr.ReadAsync())
+            SqlDataReader? dr = _sqlTools.OpenDataReader("", "", strSQL); // Changed to nullable SqlDataReader  
+
+            if (dr != null) // Ensure dr is not null before proceeding  
             {
-                lista.Add(new Persons()
+                while (await dr.ReadAsync())
                 {
-                    Id = Convert.ToInt32(dr["Id"].ToString()),
-                    Name = dr["Name"].ToString(),
-                    Age = Convert.ToInt32(dr["Age"].ToString()),
-                    Email = dr["Email"].ToString()
-
-                });
+                    lista.Add(new Persons()
+                    {
+                        Id = Convert.ToInt32(dr["Id"].ToString()),
+                        Name = dr["Name"].ToString(),
+                        Age = Convert.ToInt32(dr["Age"].ToString()),
+                        Email = dr["Email"].ToString() ?? ""
+                    });
+                }
+                await dr.CloseAsync();
+                await dr.DisposeAsync();
             }
-            await dr.CloseAsync();
-            await dr.DisposeAsync();
             return lista;
         }
 
@@ -74,10 +79,10 @@ namespace PersonsMVC.Tools
         {
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("INSERT INTO Persons (Name,Age,Email)");
-            strSQL.AppendLine(" Values(" + _sqlTools.QI(persons.Name, false, true));
+            strSQL.AppendLine(" Values(" + _sqlTools.QI(persons.Name ?? "", false, true));
             strSQL.AppendLine("        " + _sqlTools.QI(persons.Age.ToString(),true, true));
             strSQL.AppendLine("        " + _sqlTools.QI(persons.Email, false, false) + ")");
-            await _sqlTools.ExecCommandAsync("", "CreatePersonsADO", strSQL);
+            await _sqlTools.ExecuteQueryAsync("", "CreatePersonsADO", strSQL);
             return persons;
         }
         public async Task<Persons> EditPerson(int? id)
@@ -89,16 +94,20 @@ namespace PersonsMVC.Tools
             {
                 strSQL.AppendLine(" WHERE Id = " + id);
             }
-            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
-            while (await dr.ReadAsync())
+            SqlDataReader? dr = _sqlTools.OpenDataReader("", "", strSQL); // Fix: Changed to nullable SqlDataReader  
+
+            if (dr != null) // Fix: Ensure dr is not null before proceeding  
             {
-                person.Id = Convert.ToInt32(dr["Id"].ToString());
-                person.Name = dr["Name"].ToString();
-                person.Age = Convert.ToInt32(dr["Age"].ToString());
-                person.Email = dr["Email"].ToString();
+                while (await dr.ReadAsync())
+                {
+                    person.Id = Convert.ToInt32(dr["Id"].ToString());
+                    person.Name = dr["Name"].ToString();
+                    person.Age = Convert.ToInt32(dr["Age"].ToString());
+                    person.Email = dr["Email"].ToString() ?? "";
+                }
+                await dr.CloseAsync();
+                await dr.DisposeAsync();
             }
-            await dr.CloseAsync();
-            await dr.DisposeAsync();
             return person;
         }
         public async Task<Persons> UpdatePersonsADO(int id, Persons persons)
@@ -109,7 +118,7 @@ namespace PersonsMVC.Tools
             strSQL.AppendLine("     Age = " + _sqlTools.QI(persons.Age.ToString(), true, true));
             strSQL.AppendLine("     Email = " + _sqlTools.QI(persons.Email, false, false));
             strSQL.AppendLine(" WHERE Id = " + id);
-            await _sqlTools.ExecCommandAsync("", "UpdatePersonsADO", strSQL);
+            await _sqlTools.ExecuteQueryAsync("", "UpdatePersonsADO", strSQL);
             return persons;
         }
 
@@ -118,19 +127,21 @@ namespace PersonsMVC.Tools
             List<Autocomplete> lista = new List<Autocomplete>();
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("Select ID,Name From Persons");
-            strSQL.AppendLine(" WHERE Name like '%" + str +"%'");
-            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
-
-            while (await dr.ReadAsync())
+            strSQL.AppendLine(" WHERE Name like '%" + str + "%'");
+            SqlDataReader? dr = _sqlTools.OpenDataReader("", "", strSQL);
+            if (dr != null) // Fix: Ensure dr is not null before proceeding  
             {
-                lista.Add(new Autocomplete()
+                while (await dr.ReadAsync())
                 {
-                    label = dr["Name"].ToString(),
-                    val = Convert.ToInt32(dr["Id"].ToString())
-                });
+                    lista.Add(new Autocomplete()
+                    {
+                        label = dr["Name"]?.ToString() ?? string.Empty, // Fix: Handle possible null value  
+                        val = Convert.ToInt32(dr["Id"].ToString())
+                    });
+                }
+                await dr.CloseAsync();
+                await dr.DisposeAsync();
             }
-            await dr.CloseAsync();
-            await dr.DisposeAsync();
             return lista;
         }
         public async Task<List<PersonsRoles>> GetPersonsRoles()
@@ -138,34 +149,42 @@ namespace PersonsMVC.Tools
             List<PersonsRoles> lista = new List<PersonsRoles>();
             StringBuilder strSQL = new StringBuilder();
             strSQL.AppendLine("Select IDRole,RoleName From Roles");
-            SqlDataReader dr = _sqlTools.OpenDataReader("", "", strSQL);
+            SqlDataReader? dr = _sqlTools.OpenDataReader("", "", strSQL);
 
-            while (await dr.ReadAsync())
+            if (dr != null) // Ensure dr is not null before proceeding  
             {
-                lista.Add(new PersonsRoles()
+                if (dr != null)
                 {
-                    RoleName = dr["RoleName"].ToString(),
-                    IDRole = Convert.ToInt32(dr["IDRole"].ToString())
-                });
+                    while (await dr.ReadAsync())
+                    {
+                        lista.Add(new PersonsRoles()
+                        {
+                            RoleName = dr["RoleName"].ToString() ?? "",
+                            IDRole = Convert.ToInt32(dr["IDRole"].ToString())
+                        });
+                    }
+                    await dr.CloseAsync();
+                    await dr.DisposeAsync();
+                }
             }
-            await dr.CloseAsync();
-            await dr.DisposeAsync();
             return lista;
         }
 
 
 
-        public async Task<int> InsertPersonsManualTsk(List<TableRowModel> rows)
+        public async Task<int> InsertPersonsManualTsk(List<PersonsTasks> rows)
         {
             StringBuilder strSQL = new StringBuilder();
-           
+
             foreach (var row in rows)
             {
                 strSQL.Clear();
-                strSQL.AppendLine("INSERT INTO PersonsManualTask (Description, Task)");
-                strSQL.AppendLine(" Values(" + _sqlTools.QI(row.Description, false, true));
-                strSQL.AppendLine("        " + _sqlTools.QI(row.Task, false, false) + ")");
-                await _sqlTools.ExecCommandAsync("", "InsertPersonsManualTsk", strSQL);
+                strSQL.AppendLine("INSERT INTO PersonsTasks ([Description],[RegisterDate],[Finished],[IDPerson])");
+                strSQL.AppendLine(" Values(" + _sqlTools.QI(row.Description?.ToString() ?? string.Empty, false)); // Fix: Use null-coalescing operator to handle possible null value  
+                strSQL.AppendLine("        " + _sqlTools.QI(row.RegisterDate?.ToString() ?? string.Empty, false)); 
+                strSQL.AppendLine("        " + _sqlTools.QI(row.Finished.ToString(), false)); 
+                strSQL.AppendLine("        " + _sqlTools.QI(row.IDPerson.ToString(), false, true)); 
+                await _sqlTools.ExecuteQueryAsync("", "InsertPersonsManualTsk", strSQL);
             }
             return 0;
         }

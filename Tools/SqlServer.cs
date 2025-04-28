@@ -1,59 +1,23 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using PersonsMVC.Interfaces;
 using System.Data;
 using System.Text;
 
 namespace PersonsMVC.Tools
 {
-    public class SqlTools
+    public class SqlServer
     {
 
         public readonly IDBSettings _settings;
         private const int TimeOut = 1000;
         private string Error = string.Empty;
-        public SqlTools(IDBSettings settings)
+        public SqlServer(IDBSettings settings)
         {
             _settings = settings;
         }
-        public async Task<long> ExecCommandAsync(string PageName, string FunctionName, StringBuilder strSQL)  // Query a ejecutar
-        {
-            SqlConnection conn = OpenConnection();
-            long Rows = 0;
-            Error = string.Empty;
-
-            if (conn != null)
-            {
-                try
-                {
-                    SqlTransaction trans;                 
-                    SqlCommand comm = new SqlCommand(strSQL.ToString(), conn);
-                    trans = conn.BeginTransaction();
-
-                    comm.CommandTimeout = TimeOut;
-                    comm.Transaction = trans;
-                    comm.CommandType = CommandType.Text;
-
-                    Rows = await comm.ExecuteNonQueryAsync();
-                    trans.Commit();
-                    trans.Dispose();
-                    comm.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Rows = 0;
-                    Error = "SQL_Tools.execCommand:" + ex.Message + " " + strSQL.ToString();
-                    WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
-                }
-                finally
-                {
-                    conn.Close();
-                }
-            }
-            return Math.Abs(Rows);
-        } 
-
-
-        public long ExecCommandSync(string PageName, string FunctionName, StringBuilder strSQL)  // Query a ejecutar
+        public async Task<IActionResult> ExecuteQueryAsync(string PageName, string FunctionName, StringBuilder strSQL)  // Query a ejecutar  
         {
             SqlConnection conn = OpenConnection();
             long Rows = 0;
@@ -66,11 +30,44 @@ namespace PersonsMVC.Tools
                     SqlTransaction trans;
                     SqlCommand comm = new SqlCommand(strSQL.ToString(), conn);
                     trans = conn.BeginTransaction();
-
                     comm.CommandTimeout = TimeOut;
                     comm.Transaction = trans;
                     comm.CommandType = CommandType.Text;
+                    Rows = await comm.ExecuteNonQueryAsync();
+                    trans.Commit();
+                    trans.Dispose();
+                    comm.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Rows = 0;
+                    WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
+                }
+                finally
+                {
+                    conn.Close();
+                }
+            }
+            return new ObjectResult(null) { StatusCode = StatusCodes.Status200OK };
+        }
 
+
+        public long ExecuteQuerySync(string PageName, string FunctionName, StringBuilder strSQL)  // Query a ejecutar
+        {
+            SqlConnection conn = OpenConnection();
+            long Rows = 0;
+            Error = string.Empty;
+
+            if (conn != null)
+            {
+                try
+                {
+                    SqlTransaction trans;
+                    SqlCommand comm = new SqlCommand(strSQL.ToString(), conn);
+                    trans = conn.BeginTransaction();
+                    comm.CommandTimeout = TimeOut;
+                    comm.Transaction = trans;
+                    comm.CommandType = CommandType.Text;
                     Rows = comm.ExecuteNonQuery();
                     trans.Commit();
                     trans.Dispose();
@@ -79,7 +76,6 @@ namespace PersonsMVC.Tools
                 catch (Exception ex)
                 {
                     Rows = 0;
-                    Error = "SQL_Tools.execCommand:" + ex.Message + " " + strSQL.ToString();
                     WriteError(PageName, "execCommand " + PageName + " " + FunctionName, ex.Message + " " + strSQL.ToString());
                 }
                 finally
@@ -121,12 +117,12 @@ namespace PersonsMVC.Tools
                 ;
             }
         }
-        public SqlDataReader OpenDataReader(string pagina, string funcion, StringBuilder strSQL)
+        public SqlDataReader? OpenDataReader(string pagina, string funcion, StringBuilder strSQL)
         {
             SqlConnection cnSQL;
             SqlCommand cmSQL;
             cnSQL = OpenConnection();
-            SqlDataReader drSQL = null;
+            SqlDataReader? drSQL = null;
             Error = string.Empty;
 
             if (cnSQL != null)
@@ -138,14 +134,14 @@ namespace PersonsMVC.Tools
                 }
                 catch (Exception ex)
                 {
-                    Error = "SQL_Tools.OpenDataReader:" + ex.Message + " " + strSQL.ToString();
+                    Error = "SqlServer.OpenDataReader:" + ex.Message + " " + strSQL.ToString();
                     WriteError(pagina, "OpenDataReader " + pagina + " " + funcion, ex.Message + " " + strSQL.ToString());
                 }
             }
             return drSQL;
         } // End Function GetClave
 
-        public string QI(string value, bool number, bool coma)
+        public string QI(string value, bool number, bool coma = true)
         {
             string nvalue = value == null ? value = "" : value;
             string sVal;
