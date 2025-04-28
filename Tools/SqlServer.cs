@@ -12,7 +12,6 @@ namespace PersonsMVC.Tools
 
         public readonly IDBSettings _settings;
         private const int TimeOut = 1000;
-        private string Error = string.Empty;
         public SqlServer(IDBSettings settings)
         {
             _settings = settings;
@@ -21,7 +20,6 @@ namespace PersonsMVC.Tools
         {
             SqlConnection conn = OpenConnection();
             long Rows = 0;
-            Error = string.Empty;
 
             if (conn != null)
             {
@@ -56,8 +54,6 @@ namespace PersonsMVC.Tools
         {
             SqlConnection conn = OpenConnection();
             long Rows = 0;
-            Error = string.Empty;
-
             if (conn != null)
             {
                 try
@@ -89,7 +85,6 @@ namespace PersonsMVC.Tools
         public SqlConnection OpenConnection()
         {
             SqlConnection cnSQL = new SqlConnection { ConnectionString = _settings.DBConnection };
-            Error = string.Empty;
             try
             {
                 cnSQL.Open();
@@ -123,8 +118,6 @@ namespace PersonsMVC.Tools
             SqlCommand cmSQL;
             cnSQL = OpenConnection();
             SqlDataReader? drSQL = null;
-            Error = string.Empty;
-
             if (cnSQL != null)
             {
                 try
@@ -134,7 +127,6 @@ namespace PersonsMVC.Tools
                 }
                 catch (Exception ex)
                 {
-                    Error = "SqlServer.OpenDataReader:" + ex.Message + " " + strSQL.ToString();
                     WriteError(pagina, "OpenDataReader " + pagina + " " + funcion, ex.Message + " " + strSQL.ToString());
                 }
             }
